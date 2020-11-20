@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_local"
+        android:icon="@drawable/ic_baseline_home_24"
+        android:title="@string/tab_text_local" />
+
+    <item
+        android:id="@+id/nav_remote"
+        android:icon="@drawable/ic_baseline_settings_remote_24"
+        android:title="@string/tab_text_remote" />
+
+    <item
+        android:id="@+id/nav_places"
+        android:icon="@drawable/ic_baseline_place_24"
+        android:title="@string/tab_text_places" />
+
+    <item
+        android:id="@+id/nav_log"
+        android:icon="@drawable/ic_bug_report_black_24dp"
+        android:title="@string/tab_text_log" />
+
+</menu>

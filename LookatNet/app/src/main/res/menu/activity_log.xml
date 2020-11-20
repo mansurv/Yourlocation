@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:com.netmontools.lookatnet="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.netmontools.lookatnet.ui.log_view.LogFragment">
+
+    <item android:id="@+id/action_read"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_description_black_24dp"
+        android:title="@string/action_read"
+        com.netmontools.lookatnet:showAsAction="never"/>
+
+</menu>
