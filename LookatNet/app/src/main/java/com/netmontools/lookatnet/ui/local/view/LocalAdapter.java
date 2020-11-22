@@ -66,7 +66,7 @@ public class LocalAdapter extends RecyclerView.Adapter<LocalAdapter.LocalHolder>
     }
 
     @Override
-    public void onBindViewHolder(@NonNull LocalHolder holder, int position) {
+    public void onBindViewHolder(@NonNull com.netmontools.lookatnet.ui.local.view.LocalAdapter.LocalHolder holder, int position) {
         Folder currentPoint = points.get(position);
 
         holder.textViewTitle.setText(currentPoint.getName());

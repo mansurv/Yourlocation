@@ -11,7 +11,7 @@ import androidx.room.Update;
 import java.util.List;
 
 @Dao
-public interface  RemoteModelDao {
+public interface RemoteModelDao {
     @Query("SELECT * FROM RemoteModel")
     LiveData<List<RemoteModel>> getAll();
 
@@ -21,8 +21,8 @@ public interface  RemoteModelDao {
     @Query("SELECT * FROM RemoteModel WHERE addr = :addr")
     RemoteModel getByAddr(String addr);
 
-    @Query("SELECT * FROM RemoteModel WHERE name = :name AND bssid = :bssid")
-    RemoteModel getByNameAndBssid(String name, String bssid);
+    @Query("SELECT * FROM RemoteModel WHERE addr = :addr AND bssid = :bssid")
+    RemoteModel getByAddrAndBssid(String addr, String bssid);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(RemoteModel remoteDataModel);

@@ -56,10 +56,10 @@ public class App extends Application implements Configuration.Provider {
                 .build();
 
         WorkManager.initialize(
-                this,
-                new Configuration.Builder()
-                        .setExecutor(Executors.newFixedThreadPool(8))
-                        .build());
+                    this,
+                    new Configuration.Builder()
+                            .setExecutor(Executors.newFixedThreadPool(255))
+                            .build());
         host_image =  ContextCompat.getDrawable(this, R.drawable.ic_desktop_windows_black_24dp);
         folder_image =  ContextCompat.getDrawable(this, R.drawable.ic_folder_open_black_24dp);
         file_image = ContextCompat.getDrawable(this, R.drawable.ic_file);
@@ -75,7 +75,7 @@ public class App extends Application implements Configuration.Provider {
         return database;
     }
 
-    /*public static void imageSelector(File file) {
+    public static void imageSelector(File file) {
         String ext = SimpleUtils.getExtension(file.getName());
         switch (ext) {
             case "ai" : file_image = ContextCompat.getDrawable(App.instance, R.drawable.ic_ai); break;
@@ -111,7 +111,7 @@ public class App extends Application implements Configuration.Provider {
             case "zip" : file_image = ContextCompat.getDrawable(App.instance, R.drawable.ic_zip); break;
             default : file_image = ContextCompat.getDrawable(App.instance, R.drawable.ic_file); break;
         }
-    }*/
+    }
 
     private static class PopulateDbAsyncTask extends AsyncTask<Void, Void, String> {
         @Override
@@ -248,4 +248,3 @@ public class App extends Application implements Configuration.Provider {
         }
     }
 }
-

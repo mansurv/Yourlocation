@@ -24,79 +24,51 @@ class FilesRepository(application: Application?) {
 
     suspend fun update(point: RemoteFolder?) = withContext(ioDispatcher) {
         coroutineScope {
-            launch { SmbAccess(point)}
+            launch { smbAccess(point)}
         }
-        PostUpdate()
+        onPostUpdate()
     }
 
     fun getAll(): LiveData<List<RemoteFolder>>? {
         return allPoints
     }
 
-   suspend fun PostUpdate()  = withContext(mainDispatcher) {
+   suspend fun onPostUpdate()  = withContext(mainDispatcher) {
        liveData!!.value = App.remoteFolders
        allPoints = liveData
    }
 
-    fun SmbAccess(point: RemoteFolder?): Array<String>? {
+    fun smbAccess(point: RemoteFolder?): Array<String>? {
         var url: String
         if (point?.isHost!!) {
             val db: AppDatabase
             db = App.getInstance().database
             val remoteDao: RemoteModelDao = db.remoteModelDao()
             val remote: RemoteModel
-            remote = remoteDao.getByNameAndBssid(point.name, point.bssid)
+            remote = remoteDao.getByAddrAndBssid(point.addr, point.bssid)
             user = remote.login.toString()
             pass = remote.pass.toString()
             url = point.path.toString()
-            App.remoteRootPath = url
+            remoteRootPath = url
         } else {
             url = point.path + point.name + "/"
-            App.remotePreviousPath = point.path
+            remotePreviousPath = url
         }
 
         val auth = NtlmPasswordAuthentication(null, user, pass)
         var dir: SmbFile? = null
         try {
+            App.share = null
             dir = SmbFile(url, auth)
             for (f in dir.listFiles()) {
-                share = dir.list()
+                App.share = dir.list()
             }
             App.remoteFolders.clear()
-            for (i in 0..((share?.size)?.minus(1))!!) {
+            for (i in 0..(App.share.size -1)) {
                 val fd: RemoteFolder = RemoteFolder()
-                try {
-                    dir = SmbFile(url + share!!.get(i), auth)
-                    if (dir.isDirectory) {
-                        fd.isFile = false
-                        fd.image = App.folder_image
-                        fd.name = share!!.get(i)
-                        fd.path = url
-                        App.remoteFolders.add(fd)
-                    } else {
-                        continue
-                    }
-                } catch (se: SmbException) {
-                    se.printStackTrace()
-                }
-            }
-            for (i in 0..((share?.size)?.minus(1))!!) {
-                val fd: RemoteFolder = RemoteFolder()
-                try {
-                    dir = SmbFile(url + share!!.get(i), auth)
-                    if (dir.isDirectory) {
-                        continue
-                    } else {
-                        fd.isFile = true
-                        fd.size = dir.length()
-                        fd.image = App.file_image
-                        fd.name = share!!.get(i)
-                        fd.path = url
-                        App.remoteFolders.add(fd)
-                    }
-                } catch (se: SmbException) {
-                    se.printStackTrace()
-                }
+                fd.name = App.share.get(i)
+                fd.path = url
+                App.remoteFolders.add(fd)
             }
         } catch (mue: MalformedURLException) {
             if (App.share == null) App.share = arrayOfNulls(1)
@@ -112,11 +84,10 @@ class FilesRepository(application: Application?) {
     }
 
     companion object {
+        lateinit var remoteRootPath: String
+        lateinit var remotePreviousPath: String
         lateinit var user: String
         lateinit var pass: String
-
-        //var hosts = ArrayList<RemoteModel>()
-        var share: Array<String>? = null
         private const val TAG = "FilesRepository"
         private lateinit var liveData: MutableLiveData<List<RemoteFolder>>
     }
@@ -125,7 +96,6 @@ class FilesRepository(application: Application?) {
         if (application != null) {
             context = application
         }
-
         liveData = MutableLiveData()
         try {
             liveData!!.setValue(App.remoteFolders)

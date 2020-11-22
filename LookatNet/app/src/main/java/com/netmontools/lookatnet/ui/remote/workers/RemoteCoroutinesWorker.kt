@@ -119,10 +119,8 @@ class RemoteCoroutinesWorker(context: Context, workerParams: WorkerParameters) :
                 return ""
             }
             return try {
-                if (dir != null) {
-                    for (f in dir.listFiles()) {
-                        share = dir.list()
-                    }
+                for (f in dir.listFiles()) {
+                    share = dir.list()
                 }
                 if (share != null) {
                     "0"

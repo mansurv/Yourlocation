@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_main"
+            android:icon="@drawable/ic_phone_android_black_24dp"
+            android:title="@string/menu_main" />
+        <item
+            android:id="@+id/nav_db_view"
+            android:icon="@drawable/ic_view_list_24dp"
+            android:title="@string/menu_db_view" />
+    </group>
+
+    <item android:title="@string/menu_tools">
+        <menu>
+
+            <item
+                android:id="@+id/nav_log_view"
+                android:icon="@drawable/ic_bug_report_black_24dp"
+                android:title="@string/menu_log_view" />
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@drawable/ic_settings_black_24dp"
+                android:title="@string/menu_settings" />
+            <item
+                android:id="@+id/nav_exit"
+                android:icon="@drawable/ic_exit_to_app_black_24dp"
+                android:title="@string/menu_exit" />
+        </menu>
+    </item>
+
+</menu>

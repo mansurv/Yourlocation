@@ -2,6 +2,8 @@ package com.netmontools.lookatnet.utils;
 
 import android.webkit.MimeTypeMap;
 
+import com.netmontools.lookatnet.utils.SimpleUtils;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Locale;

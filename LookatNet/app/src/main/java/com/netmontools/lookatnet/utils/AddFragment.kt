@@ -49,7 +49,7 @@ class AddFragment : DialogFragment(), DialogInterface.OnClickListener {
                 .putString("bssid", currentBssid)
                 .putString("subnetIP", subnetIP)
                 .putString("name", nameBox!!.text.toString())
-                .putString("addr", addrBox!!.text.toString())
+                .putString("address", addrBox!!.text.toString())
                 .putString("user", loginBox!!.text.toString())
                 .putString("pass", passwordBox!!.text.toString())
                 .build()

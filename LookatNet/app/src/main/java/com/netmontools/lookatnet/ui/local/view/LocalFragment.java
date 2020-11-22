@@ -43,8 +43,6 @@ public class  LocalFragment extends Fragment {
     private static LocalViewModel localViewModel;
     private static LocalAdapter adapter;
     private static int position;
-    private ImageButton button;
-    private TextView disabledText;
 
     private static final String ARG_COUNT = "param1";
 
@@ -63,7 +61,7 @@ public class  LocalFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //setRetainInstance(true);
-        //setHasOptionsMenu(true);
+        setHasOptionsMenu(true);
         int index = 1;
         if (getArguments() != null) {
             index = getArguments().getInt(ARG_COUNT);
@@ -170,10 +168,10 @@ public class  LocalFragment extends Fragment {
                             localViewModel.update(fd);
 
                             assert fd.getName() != null;
-                            if (fd.getName().equalsIgnoreCase(""))
-                                disabledText.setText(fd.getPath());
-                            else
-                                disabledText.setText(fd.getName());
+                            //if (fd.getName().equalsIgnoreCase(""))
+                                //disabledText.setText(fd.getPath());
+                            //else
+                                //disabledText.setText(fd.getName());
                         }
                     } else {
                         this.setEnabled(false);
@@ -192,15 +190,17 @@ public class  LocalFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
     }
 
     private void deleteFolder() {
-        confirmDelete.instantiate().show(requireActivity().getSupportFragmentManager(), "confirm delete");
+        assert getFragmentManager() != null;
+        LocalFragment.confirmDelete.instantiate().show(getFragmentManager(), "confirm delete");
     }
 
     public static class confirmDelete extends DialogFragment {
 
-        private static DialogFragment instantiate() { return new confirmDelete();
+        private static DialogFragment instantiate() { return new LocalFragment.confirmDelete();
         }
 
         @NotNull

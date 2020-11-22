@@ -66,7 +66,7 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesHolder>
     }
 
     @Override
-    public void onBindViewHolder(@NonNull FilesHolder holder, int position) {
+    public void onBindViewHolder(@NonNull com.netmontools.lookatnet.ui.remote.view.FilesAdapter.FilesHolder holder, int position) {
         RemoteFolder currentPoint = points.get(position);
 
         holder.textViewTitle.setText(currentPoint.getName());

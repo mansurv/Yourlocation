@@ -1,11 +1,15 @@
 package com.netmontools.lookatnet.utils.map;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Display;
 
 import androidx.fragment.app.FragmentActivity;
 import androidx.loader.content.Loader;
+import androidx.loader.content.CursorLoader;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -16,6 +20,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
 import com.netmontools.lookatnet.BuildConfig;
 import com.netmontools.lookatnet.R;
 import com.netmontools.lookatnet.utils.LogSystem;
@@ -24,7 +29,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "MapsActivity";
     public static final String SATELLITE = "com.netmontools.accesspoints.SATELLITE";
-    public static final String SHEME = "com.netmontools.accesspoints.SHEME";
     public static final String LATITUDE = "com.netmontools.accesspoints.LATITUDE";
     public static final String LONGITUDE = "com.netmontools.accesspoints.LONGITUDE";
     public static final String BSSID = "com.netmontools.accesspoints.BSSID";
@@ -34,7 +38,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mGoogleMap;
     public static Cursor mapCursor;
     private boolean isSatelliteMode = false;
-    private boolean isShemeMode = false;
     SupportMapFragment mapFragment = null;
 
     public long argId = -1;
@@ -55,7 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         isSatelliteMode = getIntent().getBooleanExtra(SATELLITE,false);
-        isShemeMode = getIntent().getBooleanExtra(SHEME,false);
+
         argId = getIntent().getLongExtra(ID, -1);
         argLatitude = getIntent().getDoubleExtra(LATITUDE, 0);
         argLongitude = getIntent().getDoubleExtra(LONGITUDE, 0);
@@ -67,10 +70,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
         if (isSatelliteMode) {
-            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        } else if (isShemeMode) {
-            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        } else googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+            googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        } else googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
         mGoogleMap.getUiSettings().setMapToolbarEnabled(false);
 

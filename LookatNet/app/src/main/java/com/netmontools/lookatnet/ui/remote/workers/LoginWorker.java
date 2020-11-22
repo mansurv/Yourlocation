@@ -39,14 +39,14 @@ public class LoginWorker extends Worker {
         db = App.getInstance().getDatabase();
         RemoteModelDao remoteDao = db.remoteModelDao();
         RemoteModel remote;
-        remote = remoteDao.getByNameAndBssid(address, currentBssid);
+        remote = remoteDao.getByAddrAndBssid(address, currentBssid);
         if  (remote != null) {
             if (currentUser.isEmpty() || currentPass.isEmpty()) {
                 user = remote.getLogin();
                 pass = remote.getPass();
-                if (user.isEmpty() || pass.isEmpty()) {
-                    return failure();
-                }
+                //if (user.isEmpty() || pass.isEmpty()) {
+                //    return failure();
+                //}
                 Data outputData = new Data.Builder()
                         .putString("user", user)
                         .putString("pass", pass)
@@ -64,6 +64,20 @@ public class LoginWorker extends Worker {
             }
             return failure();
         }
+        /*if (currentUser.isEmpty() || currentPass.isEmpty()) {
+            user = remote.getLogin();
+            pass = remote.getPass();
+            Data outputData = new Data.Builder()
+                    .putString("user", user)
+                    .putString("pass", pass)
+                    .build();
+
+            return success(outputData);
+        } else {
+            remote.setLogin(currentUser);
+            remote.setPass(currentPass);
+            remoteDao.update(remote);
+        }*/
 
         return success();
     }

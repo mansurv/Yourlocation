@@ -7,13 +7,15 @@ import android.view.View
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Observer
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.netmontools.lookatnet.App
 import com.netmontools.lookatnet.R
+import com.netmontools.lookatnet.ui.remote.view.FilesFragment
 import com.netmontools.lookatnet.ui.remote.workers.LoginWorker
-
+import java.util.concurrent.ExecutionException
 
 class LoginFragment : DialogFragment(), DialogInterface.OnClickListener {
     lateinit var v: View

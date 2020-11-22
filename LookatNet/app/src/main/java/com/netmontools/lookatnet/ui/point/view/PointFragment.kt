@@ -1,23 +1,18 @@
 package com.netmontools.lookatnet.ui.point.view
 
-import android.Manifest
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.*
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -49,12 +44,6 @@ class PointFragment : Fragment() {
     private var isShemeMode: Boolean = false
     private var isHybridMode: Boolean = true
     val sp = PreferenceManager.getDefaultSharedPreferences(App.instance)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //setRetainInstance(true);
-        setHasOptionsMenu(true);
-    }
 
     private val listener: LocationListener = object : LocationListener {
         private var locationWorkRequest: OneTimeWorkRequest? = null
@@ -102,7 +91,12 @@ class PointFragment : Fragment() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //setRetainInstance(true);
+        setHasOptionsMenu(true)
+    }
+
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
@@ -133,8 +127,7 @@ class PointFragment : Fragment() {
 
         adapter.setOnItemClickListener { point ->
             val intent = Intent(activity, MapsActivity::class.java)
-            intent.putExtra(MapsActivity.SATELLITE, isSatelliteMode)
-            intent.putExtra(MapsActivity.SHEME, isShemeMode)
+            intent.putExtra(MapsActivity.SATELLITE, false)
             intent.putExtra(MapsActivity.ID, point.id)
             intent.putExtra(MapsActivity.BSSID, point.bssid)
             intent.putExtra(MapsActivity.SSID, point.name)
@@ -143,97 +136,63 @@ class PointFragment : Fragment() {
             startActivity(intent)
         }
         val locationManager = App.instance.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (locationManager != null) {
-            allProv = locationManager.allProviders
-            if (!(allProv).isEmpty()) {
-                val sb = StringBuilder()
-                for (i in (allProv ).indices) {
-                    sb.append((allProv).get(i))
-                    if (i != (allProv ).size - 1) sb.append(", ")
-                }
-                if (BuildConfig.USE_LOG) {
-                    LogSystem.logInFile(TAG, "\r\n Available providers:\n  $sb")
-                }
+        allProv = locationManager.allProviders
+        if (!(allProv).isEmpty()) {
+            val sb = StringBuilder()
+            for (i in (allProv ).indices) {
+                sb.append((allProv).get(i))
+                if (i != (allProv ).size - 1) sb.append(", ")
+            }
+            if (BuildConfig.USE_LOG) {
+                LogSystem.logInFile(TAG, "\r\n Available providers:\n  $sb")
             }
         }
         val wifiManager = App.instance.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val connManager = App.instance.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         currentSsid = "My location"
         currentBssid = "0"
-        if (connManager != null) {
-            val wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
-            //val network = connManager.activeNetwork
-            //val abc = connManager.reportNetworkConnectivity(network,true)
-            try {
-                if (wifi != null) {
-                    if (wifi.isConnectedOrConnecting) {
-                        if (wifi.isConnected) {
-                            val wifiInfo = wifiManager.connectionInfo
-                            if (wifiInfo != null) {
-                                if (wifiInfo.ssid != null) {
-                                    currentSsid = wifiInfo.ssid.replace("\"", " ").trim { it <= ' ' }
-                                }
-                                if (wifiInfo.bssid != null) {
-                                    currentBssid = wifiInfo.bssid
-                                }
-                            }
+        val wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+        try {
+            if (wifi.isConnectedOrConnecting) {
+                if (wifi.isConnected) {
+                    val wifiInfo = wifiManager.connectionInfo
+                    if (wifiInfo != null) {
+                        if (wifiInfo.ssid != null) {
+                            currentSsid = wifiInfo.ssid.replace("\"", " ").trim { it <= ' ' }
+                        }
+                        if (wifiInfo.bssid != null) {
+                            currentBssid = wifiInfo.bssid
                         }
                     }
                 }
-            } catch (npe: NullPointerException) {
-                npe.printStackTrace()
             }
+        } catch (npe: NullPointerException) {
+            npe.printStackTrace()
         }
         swipeRefreshLayout.setOnRefreshListener(OnRefreshListener {
             // Execute code when refresh layout swiped
-            if (getActivity()?.let { ActivityCompat.checkSelfPermission(it, android.Manifest.permission.ACCESS_FINE_LOCATION) } == PackageManager.PERMISSION_GRANTED) {
-                var gps_enabled = false
-                var network_enabled = false
-                // Exceptions will be thrown if the provider is not permitted.
-                try {
-                    gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                } catch (ex: Exception) {
-                }
-                try {
-                    network_enabled = locationManager
-                            .isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-                } catch (ex: Exception) {
-                }
-
-                //if (gps_enabled) {
-                //    locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, listener, null)
-                /**} else */if (network_enabled)
-                    locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, listener, null)
-            } else {
-                if (allProv.isNotEmpty()) {
-                    for (i in allProv.indices) {
-                        if (allProv[i].equals("network", ignoreCase = true)) {
-                            try {
-                                locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, listener, null)
-                                break
-                            } catch (se: SecurityException) {
-                                se.printStackTrace()
-                            } catch (npe: NullPointerException) {
-                                npe.printStackTrace()
-                            }
+            //if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (allProv.isNotEmpty()) {
+                for (i in allProv.indices) {
+                    if (allProv[i].equals("network", ignoreCase = true)) {
+                        try {
+                            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, listener, null)
+                            break
+                        } catch (se: SecurityException) {
+                            se.printStackTrace()
+                        } catch (npe: NullPointerException) {
+                            npe.printStackTrace()
                         }
                     }
                 }
             }
-
+            //}
         })
         return root
     }
 
-    override fun onResume() {
-        super.onResume()
-        //isSatelliteMode = sp.getBoolean("isSatellite_mode", false)
-        //isShemeMode = sp.getBoolean("isSheme_mode", false)
-        //isHybridMode = sp.getBoolean("isHybrid_mode", true)
-    }
-
     private fun deleteAccessPoint() {
-        confirmDelete.instantiate().show(requireActivity().supportFragmentManager, "confirm delete")
+        confirmDelete.instantiate().show(requireFragmentManager(), "confirm delete")
     }
 
     class confirmDelete : DialogFragment() {
@@ -256,6 +215,13 @@ class PointFragment : Fragment() {
                 return confirmDelete()
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "PointFragment"
+        private lateinit var pointViewModel: PointViewModel
+        private lateinit var adapter: PointAdapter
+        private var position = 0
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -300,12 +266,5 @@ class PointFragment : Fragment() {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    companion object {
-        private const val TAG = "PointFragment"
-        private lateinit var pointViewModel: PointViewModel
-        private lateinit var adapter: PointAdapter
-        private var position = 0
     }
 }

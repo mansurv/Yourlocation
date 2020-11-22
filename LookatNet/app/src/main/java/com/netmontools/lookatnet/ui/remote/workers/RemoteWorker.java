@@ -94,6 +94,7 @@ public class RemoteWorker extends Worker {
                         folder.isHost = true;
                         folder.setImage(App.host_image);
                         folder.setName(splitted[1]);
+                        folder.setAddr(splitted[0]);
                         folder.setPath(url + splitted[0] + "/");
                         App.remoteFolders.add(folder);
                     } else if (splitted[len - 1].equals("1")) {
@@ -111,6 +112,7 @@ public class RemoteWorker extends Worker {
                         folder.isHost = true;
                         folder.setImage(App.host_image);
                         folder.setName(splitted[1]);
+                        folder.setAddr(splitted[0]);
                         folder.setPath(url + splitted[0] + "/");
                         folder.setBssid(currentBssid);
                         App.remoteFolders.add(folder);
