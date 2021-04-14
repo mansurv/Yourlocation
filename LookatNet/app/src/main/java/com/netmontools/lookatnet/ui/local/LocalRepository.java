@@ -26,15 +26,15 @@ public class  LocalRepository {
     }
 
     public void delete(Folder point) {
-        new LocalRepository.DeletePointAsyncTask().execute(point);
+        new DeletePointAsyncTask().execute(point);
     }
 
     public void update(Folder point) {
-        new LocalRepository.UpdateListAsyncTask().execute(point);
+        new UpdateListAsyncTask().execute(point);
     }
 
     public void check(Folder point) {
-        new LocalRepository.CheckPointAsyncTask().execute(point);
+        new CheckPointAsyncTask().execute(point);
     }
 
     public LiveData<List<Folder>> getAll() {
@@ -76,7 +76,7 @@ public class  LocalRepository {
                         if (f.exists()) {
                             fd = new Folder();
                             if (f.isFile()) {
-                                App.imageSelector(f);
+                                //App.imageSelector(f);
                                 fd.setName(f.getName());
                                 fd.setPath(f.getPath());
                                 fd.isFile = true;

@@ -1,4 +1,4 @@
-package com.netmontools.lookatnet
+ package com.netmontools.lookatnet
 
 import android.Manifest
 import android.annotation.TargetApi
@@ -10,29 +10,24 @@ import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.view.KeyEvent
 import android.view.Menu
-import android.view.View
 import android.widget.ProgressBar
-
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.Navigation
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import androidx.preference.PreferenceManager
-
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.navigation.NavigationView
-
 import com.netmontools.lookatnet.utils.LogSystem
 import com.netmontools.lookatnet.utils.SimpleUtils
 import com.netmontools.lookatnet.utils.StorageHelper
 import com.netmontools.lookatnet.utils.StorageHelper.MountDevice
-
 import java.io.File
 import java.io.FileFilter
 import java.util.*
@@ -40,42 +35,25 @@ import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mAppBarConfiguration: AppBarConfiguration
-    private lateinit var progressBar: ProgressBar
-    private lateinit var drawer: DrawerLayout
-    lateinit var fab: FloatingActionButton
-    var hostsCount = 0
-    var startTime: Long = 0
+    //private lateinit var progressBar: ProgressBar
+    //private lateinit var drawer: DrawerLayout
+    //lateinit var fab: FloatingActionButton
+    //var hostsCount = 0
+    //var startTime: Long = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        isCancellable = false
-        fab = findViewById(R.id.fab)
-        fab.setOnClickListener(View.OnClickListener {
-            if (!isCancellable) {
-                progressBar.visibility = ProgressBar.VISIBLE
-                //onStartService()
-                isCancellable = true
-            } else {
-                progressBar.visibility = ProgressBar.INVISIBLE
-                //onStopService()
-                isCancellable = false
-            }
-        })
-        drawer = findViewById(R.id.drawer_layout)
-        val navigationView = findViewById<NavigationView>(R.id.nav_view)
-        progressBar = navigationView.findViewById(R.id.prog_bar)
+        val navView = findViewById<BottomNavigationView>(R.id.nav_view)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
-        mAppBarConfiguration = AppBarConfiguration.Builder(R.id.nav_main,
-                R.id.nav_local, R.id.nav_remote, R.id.nav_db_view,
-                R.id.nav_log_view, R.id.nav_settings, R.id.nav_exit)
-                .setDrawerLayout(drawer)
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        val appBarConfiguration = AppBarConfiguration.Builder(
+                R.id.nav_local, R.id.nav_remote, R.id.nav_places, R.id.nav_log)
                 .build()
         val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration)
-        NavigationUI.setupWithNavController(navigationView, navController)
+        ///NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration)
+        NavigationUI.setupWithNavController(navView, navController)
 
         telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -138,17 +116,17 @@ class MainActivity : AppCompatActivity() {
                   Processor: ${sp.getString("proc", "")}
                   Cpu cores: $numCpuCores""")
             }
-            if (telephonyManager != null) {
-                if (BuildConfig.USE_LOG) {
+            /*if (telephonyManager != null) {
+                //if (BuildConfig.USE_LOG) {
                     LogSystem.logInFile(TAG, """
-                     Network type: ${getNetworkType()}
+                     Network type: ${getNetworkType(this)}
                      Phone type: ${telephonyManager!!.phoneType}""")
-                }
-            }
+                //}
+            }*/
             if (checkPlayServices()) {
-                if (BuildConfig.USE_LOG) {
+                //if (BuildConfig.USE_LOG) {
                     LogSystem.logInFile(TAG, "\r\n Google Play Service availiable ")
-                }
+               // }
             }
         }
     }
@@ -204,7 +182,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+         val navController = Navigation.findNavController(this, R.id.nav_host_fragment)
         return (NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp())
     }
@@ -217,9 +195,9 @@ class MainActivity : AppCompatActivity() {
                 apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
                         .show()
             } else {
-                if (BuildConfig.USE_LOG) {
+                //if (BuildConfig.USE_LOG) {
                     LogSystem.logInFile(TAG, "\r\n This device is not supported")
-                }
+                //}
             }
             return false
         }
@@ -265,8 +243,20 @@ class MainActivity : AppCompatActivity() {
         var telephonyManager: TelephonyManager? = null
         var locationManager: LocationManager? = null
         var database: AppDatabase? = null
-        fun getNetworkType(): String {
+        fun getNetworkType(context: Context?): String {
             if (telephonyManager != null) {
+                //if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                //val networkType = if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                //return
+                //}
+
                 val networkType = telephonyManager!!.networkType
                 when (networkType) {
                     TelephonyManager.NETWORK_TYPE_GSM -> return "GSM"

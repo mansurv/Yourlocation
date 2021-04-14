@@ -3,36 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_main">
-
-    <fragment
-        android:id="@+id/nav_main"
-        android:name="com.netmontools.lookatnet.ui.main.MainFragment"
-        android:label="@string/menu_main"
-        tools:layout="@layout/fragment_main" />
-
+    app:startDestination="@+id/nav_local">
     <fragment
         android:id="@+id/nav_local"
         android:name="com.netmontools.lookatnet.ui.local.view.LocalFragment"
-        android:label=""
+        android:label="Local files"
         tools:layout="@layout/fragment_local" />
 
     <fragment
         android:id="@+id/nav_remote"
         android:name="com.netmontools.lookatnet.ui.remote.view.FilesFragment"
-        android:label=""
+        android:label="Remote files"
         tools:layout="@layout/fragment_files" />
 
     <fragment
-        android:id="@+id/nav_log_view"
-        android:name="com.netmontools.lookatnet.ui.log_view.LogFragment"
-        android:label="@string/menu_log_view"
-        tools:layout="@layout/fragment_log" />
-
-    <fragment
-        android:id="@+id/nav_db_view"
+        android:id="@+id/nav_places"
         android:name="com.netmontools.lookatnet.ui.point.view.PointFragment"
         android:label="@string/menu_db_view"
         tools:layout="@layout/fragment_point" />
 
+    <fragment
+        android:id="@+id/nav_log"
+        android:name="com.netmontools.lookatnet.ui.log_view.LogFragment"
+        android:label="@string/menu_log_view"
+        tools:layout="@layout/fragment_log" />
 </navigation>

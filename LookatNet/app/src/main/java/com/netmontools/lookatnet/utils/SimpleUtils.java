@@ -8,8 +8,6 @@ import android.widget.Toast;
 
 import androidx.documentfile.provider.DocumentFile;
 
-import com.netmontools.lookatnet.App;
-import com.netmontools.lookatnet.BuildConfig;
 import com.netmontools.lookatnet.R;
 
 import java.io.File;

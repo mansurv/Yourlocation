@@ -9,9 +9,10 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.view.*
-import android.widget.ImageButton
-import android.widget.TextView
+import android.util.SparseBooleanArray
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.Nullable
@@ -25,20 +26,16 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
+import androidx.work.*
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.netmontools.lookatnet.App
 import com.netmontools.lookatnet.BuildConfig
 import com.netmontools.lookatnet.R
 import com.netmontools.lookatnet.ui.remote.model.RemoteFolder
-import com.netmontools.lookatnet.ui.remote.repository.FilesRepository
 import com.netmontools.lookatnet.ui.remote.viewmodel.FilesViewModel
 import com.netmontools.lookatnet.ui.remote.viewmodel.RemoteViewModel
-import com.netmontools.lookatnet.ui.remote.workers.FilesWorker
 import com.netmontools.lookatnet.ui.remote.workers.LoginWorker
 import com.netmontools.lookatnet.ui.remote.workers.RemoteWorker
 import com.netmontools.lookatnet.utils.AddFragment
@@ -46,63 +43,86 @@ import com.netmontools.lookatnet.utils.LogSystem
 import com.netmontools.lookatnet.utils.LoginFragment
 import com.netmontools.lookatnet.utils.SimpleUtils
 import java.io.File
-import java.util.*
 
 class FilesFragment : Fragment() {
     private lateinit var  recyclerView: RecyclerView
     private lateinit var filesRefreshLayout: SwipeRefreshLayout
-    private var isSelected = false
+    private lateinit var sparseArray: SparseBooleanArray
+    private lateinit var fab: FloatingActionButton
 
     var address: String = ""
+    var name: String = ""
     private var currentBssid: String? = null
     private var subnetIP = 0
     private var broadcastIP = 0
+    private var isSelected = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setRetainInstance(true);
-        setHasOptionsMenu(true);
+        //setRetainInstance(true)
+        setHasOptionsMenu(true)
+
+        /*val bundle = arguments
+        if (bundle != null) {
+            address = bundle.getString("tag").toString()
+            currentBssid = bundle.getString("tag1").toString()
+        }*/
     }
 
     fun updateUI() {
-        // Execute code when refresh layout swiped
-        if (isNetworkConnected()) {
-            val scanWorkRequest: OneTimeWorkRequest
-            val myRemoteData = Data.Builder()
-                    .putString("bssid", currentBssid)
-                    .putInt("subnet", subnetIP)
-                    .putInt("broadcast", broadcastIP)
-                    .build()
-            scanWorkRequest = OneTimeWorkRequest.Builder(RemoteWorker::class.java)
-                    .setInputData(myRemoteData)
-                    .addTag("myRemoteTag")
-                    .build()
+        //filesRefreshLayout.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
+            // Execute code when refresh layout swiped
+            if (isNetworkConnected()) {
+                val scanWorkRequest: OneTimeWorkRequest
+                val myRemoteData = Data.Builder()
+                        .putString("bssid", currentBssid)
+                        .putInt("subnet", subnetIP)
+                        .putInt("broadcast", broadcastIP)
+                        .build()
+                scanWorkRequest = OneTimeWorkRequest.Builder(RemoteWorker::class.java)
+                        .setInputData(myRemoteData)
+                        .addTag("myRemoteTag")
+                        .build()
 
-            var wm = WorkManager.getInstance(App.instance)
-            wm.enqueue(scanWorkRequest)
-            wm.getWorkInfoByIdLiveData(scanWorkRequest.id)
-                    .observe(viewLifecycleOwner, Observer { workStatus ->
-                        if (workStatus != null && workStatus.state.isFinished) {
-                            filesRefreshLayout.setRefreshing(false)
-                            filesViewModel.allPoints.observe(viewLifecycleOwner, Observer { points -> adapter.setPoints(points) })
+                var wm = WorkManager.getInstance(App.instance)
+                wm.enqueue(scanWorkRequest)
+                wm.getWorkInfoByIdLiveData(scanWorkRequest.id)
+                        .observe(viewLifecycleOwner, Observer { workStatus ->
+                            if (workStatus != null && workStatus.state.isFinished) {
+                                filesRefreshLayout.setRefreshing(false)
+                                filesViewModel.allPoints.observe(viewLifecycleOwner, Observer { points -> adapter.setPoints(points) })
+                            }
+                        })
+            } else {
+                filesRefreshLayout.setRefreshing(false)
+                val snackbar: Snackbar
+                snackbar = Snackbar.make(recyclerView, R.string.cantrefresh, BaseTransientBottomBar.LENGTH_INDEFINITE)
+                        .setAction(R.string.action_setup) {
+                            val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
+                            startActivity(intent)
                         }
-                    })
-        } else {
-            filesRefreshLayout.setRefreshing(false)
-            val snackbar: Snackbar
-            snackbar = Snackbar.make(recyclerView, R.string.cantrefresh, BaseTransientBottomBar.LENGTH_INDEFINITE)
-                    .setAction(R.string.action_setup) {
-                        val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
-                        startActivity(intent)
-                    }
-            snackbar.show()
-        }
+                snackbar.show()
+            }
+        //)}
     }
 
     override fun onViewCreated(view: View, @Nullable savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        /*ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0,
+        fab.setOnClickListener(View.OnClickListener {
+            val dialog = AddFragment.newInstance(currentBssid.toString(), address)
+            dialog.show(requireActivity().supportFragmentManager, AddFragment.TAG)
+            //if (!isSelected) {
+            //    updateUI()
+            //    filesRefreshLayout.setRefreshing(true)
+            //    fab.setImageResource(R.drawable.ic_baseline_add_24)
+
+            //} else {
+
+           //}
+        })
+
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0,
                 ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
                 return false
@@ -124,7 +144,7 @@ class FilesFragment : Fragment() {
                         point.isChecked = true
                     }
                     isSelected = true
-                    //sparseArray.append(position, true)
+                    sparseArray.append(position, true)
                     adapter.notifyItemChanged(position)
                     break
                 }
@@ -160,10 +180,7 @@ class FilesFragment : Fragment() {
                                                     filesViewModel.update(point)
                                                 }
                                             }
-                                        } /*else if (workStatus != null && workStatus.state == WorkInfo.State.FAILED) {
-                                            val dialog = LoginFragment.newInstance(currentBssid.toString(), point.addr.toString())
-                                            dialog.show(requireActivity().supportFragmentManager, LoginFragment.TAG)
-                                        }*/
+                                        }
                                     })
                         } else {
                             val snackbar: Snackbar
@@ -206,16 +223,18 @@ class FilesFragment : Fragment() {
 
         filesRefreshLayout.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
             // Execute code when refresh layout swiped
-            //fab.setImageResource(R.drawable.ic_sync_disabled_24dp)
+            fab.setImageResource(R.drawable.ic_sync_disabled_24dp)
             updateUI()
-        })*/
+        })
     }
+
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreateView(inflater: LayoutInflater,
                               container: ViewGroup?, savedInstanceState: Bundle?): View? {
         super.onCreateView(inflater, container, savedInstanceState)
         val root = inflater.inflate(R.layout.fragment_files, container, false)
+        fab = root.findViewById(R.id.remote_fab)
 
         filesRefreshLayout = root.findViewById(R.id.files_refresh_layout)
         filesRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_bright, android.R.color.holo_green_light,
@@ -232,208 +251,56 @@ class FilesFragment : Fragment() {
         filesViewModel = ViewModelProvider.AndroidViewModelFactory(App.getInstance()).create(FilesViewModel::class.java)
         filesViewModel.allPoints.observe(viewLifecycleOwner, Observer { points -> adapter.setPoints(points) })
 
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0,
-                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                position = viewHolder.adapterPosition
-                deleteRemoteHost()
-            }
-        }).attachToRecyclerView(recyclerView)
-
-        adapter.setOnItemClickListener { point ->
-            var isSelected = false
-            for (folder in App.remoteFolders) {
-                if (folder.isChecked) {
-                    if (point.isChecked) {
-                        point.isChecked = false
-                    } else {
-                        point.isChecked = true
-                    }
-                    isSelected = true
-                    adapter.notifyItemChanged(position)
-                    break
-                }
-            }
-            if (!isSelected) {
-                if (!point.isFile) {
-                    if (point.isHost) {
-                        if (isNetworkConnected()) {
-                            val loginWorkRequest: OneTimeWorkRequest
-                            val myLoginData = Data.Builder()
-                                    .putString("bssid", currentBssid)
-                                    .putString("address", point.addr)
-                                    .putString("user", "")
-                                    .putString("pass", "")
-                                    .build()
-                            loginWorkRequest = OneTimeWorkRequest.Builder(LoginWorker::class.java)
-                                    .setInputData(myLoginData)
-                                    .addTag("myLoginTag")
-                                    .build()
-
-                            val wm = WorkManager.getInstance(App.instance)
-                            wm.enqueue(loginWorkRequest)
-                            wm.getWorkInfoByIdLiveData(loginWorkRequest.id)
-                                    .observe(viewLifecycleOwner, Observer { workStatus ->
-                                        if (workStatus != null && workStatus.state.isFinished) {
-                                            val user = workStatus.getOutputData().getString("user")
-                                            val pass = workStatus.getOutputData().getString("pass")
-                                            if (user?.isEmpty()!! || pass?.isEmpty()!!) {
-                                                val dialog = LoginFragment.newInstance(point.addr.toString(), currentBssid.toString())
-                                                dialog.show(requireFragmentManager(), LoginFragment.TAG)
-                                            } else {
-                                                filesViewModel.update(point)
-                                            }
-                                        }
-                                    })
-                        } else {
-                            val snackbar: Snackbar
-                            snackbar = Snackbar.make(recyclerView, R.string.cantrefresh, BaseTransientBottomBar.LENGTH_INDEFINITE)
-                                    .setAction(R.string.action_setup) {
-                                        val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
-                                        startActivity(intent)
-                                    }
-                            snackbar.show()
-                        }
-                    } else {
-                        filesViewModel.update(point)
-                    }
-                } else {
-                    try {
-                        if (BuildConfig.DEBUG && point.path == null) {
-                            error("Assertion failed")
-                        }
-                        val file = File(point.path.toString())
-                        if (file.exists() && file.isFile) {
-                            SimpleUtils.openFile(App.instance, file)
-                        }
-                    } catch (npe: NullPointerException) {
-                        npe.message
-                    }
-                }
-            }
-        }
-
-        adapter.setOnItemLongClickListener { point ->
-            if (point.isChecked) {
-                point.isChecked = false
-            } else {
-                point.isChecked = true
-            }
-            adapter.notifyItemChanged(position)
-        }
-
-        fun onAttach(context: Context) {
-            super.onAttach(requireContext())
-            val callback: OnBackPressedCallback = object : OnBackPressedCallback(
-                    true // default to enabled
-            ) {
-                override fun handleOnBackPressed() {
-                    try {
-                        var smbFile = App.remotePreviousPath
-                        if (smbFile != null) {
-                            if (!smbFile.equals(App.remoteRootPath, ignoreCase = true)) {
-                                val fd = RemoteFolder()
-                                smbFile = smbFile.trimEnd('/')
-                                fd.name = smbFile.substring(smbFile.lastIndexOf('/') + 1)
-                                fd.path = smbFile.substring(0, smbFile.lastIndexOf('/') + 1)
-                                fd.size = 0L
-                                fd.isHost = false
-                                fd.image = App.folder_image
-                                filesViewModel.update(fd)
-                            } else {
-                                val fd = RemoteFolder()
-                                fd.path = smbFile
-                                smbFile = smbFile.trimEnd('/')
-                                fd.name = smbFile.substring(smbFile.lastIndexOf('/') + 1)
-                                fd.size = 0L
-                                fd.isHost = true
-                                fd.bssid = currentBssid
-                                fd.image = App.host_image
-                                filesViewModel.update(fd)
-                            }
-                        } else {
-                            if (isEnabled) {
-                                isEnabled = false
-                                requireActivity().onBackPressedDispatcher.onBackPressed()
-                            }
-                        }
-                    } catch (npe: NullPointerException) {
-                        npe.printStackTrace()
-                    }
-                }
-            }
-            requireActivity().onBackPressedDispatcher.addCallback(
-                    viewLifecycleOwner,  // LifecycleOwner
-                    callback)
-        }
-
-        filesRefreshLayout.setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener {
-            // Execute code when refresh layout swiped
-            if (isNetworkConnected()) {
-                val scanWorkRequest: OneTimeWorkRequest
-                val myRemoteData = Data.Builder()
-                        .putString("bssid", currentBssid)
-                        .putInt("subnet", subnetIP)
-                        .putInt("broadcast", broadcastIP)
-                        .build()
-                scanWorkRequest = OneTimeWorkRequest.Builder(RemoteWorker::class.java)
-                        .setInputData(myRemoteData)
-                        .addTag("myRemoteTag")
-                        .build()
-
-                var wm = WorkManager.getInstance(App.instance)
-                wm.enqueue(scanWorkRequest)
-                wm.getWorkInfoByIdLiveData(scanWorkRequest.id)
-                        .observe(viewLifecycleOwner, Observer { workStatus ->
-                            if (workStatus != null && workStatus.state.isFinished) {
-                                val filesWorkRequest: OneTimeWorkRequest
-                                val myFilesData = Data.Builder()
-                                        .putString("address", address)
-                                        .build()
-                                filesWorkRequest = OneTimeWorkRequest.Builder(FilesWorker::class.java)
-                                        .setInputData(myFilesData)
-                                        .addTag("myFilesTag")
-                                        .build()
-
-                                wm.enqueue(filesWorkRequest)
-                                wm.getWorkInfoByIdLiveData(filesWorkRequest.id)
-                                        .observe(viewLifecycleOwner, Observer { workStatus ->
-                                            if (workStatus != null && workStatus.state.isFinished) {
-                                                filesRefreshLayout.setRefreshing(false)
-                                                filesViewModel.allPoints.observe(viewLifecycleOwner, Observer { points -> adapter.setPoints(points) })
-                                                val error = workStatus.getOutputData().getString("error")
-                                                if (error != null) {
-                                                    val snackbar: Snackbar
-                                                    snackbar = Snackbar.make(recyclerView,
-                                                            error,
-                                                            BaseTransientBottomBar.LENGTH_LONG)
-                                                    snackbar.show()
-                                                }
-                                            }
-                                        })
-                            }
-                        })
-            } else {
-                filesRefreshLayout.setRefreshing(false)
-                val snackbar: Snackbar
-                snackbar = Snackbar.make(recyclerView, R.string.cantrefresh, BaseTransientBottomBar.LENGTH_INDEFINITE)
-                        .setAction(R.string.action_setup) {
-                            val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
-                            startActivity(intent)
-                        }
-                snackbar.show()
-            }
-        })
-
         return root
     }
 
+    override fun onAttach(context: Context) {
+        super.onAttach(requireContext())
+        val callback: OnBackPressedCallback = object : OnBackPressedCallback(
+                true // default to enabled
+        ) {
+            override fun handleOnBackPressed() {
+                try {
+                    var smbFile = App.remotePreviousPath
+                    if (smbFile != null) {
+                        if (!smbFile.equals(App.remoteRootPath, ignoreCase = true)) {
+                            val fd = RemoteFolder()
+                            smbFile = smbFile.trimEnd('/')
+                            fd.name = smbFile.substring(smbFile.lastIndexOf('/') + 1)
+                            fd.path = smbFile.substring(0, smbFile.lastIndexOf('/') + 1)
+                            fd.size = 0L
+                            fd.isHost = false
+                            fd.image = App.folder_image
+                            filesViewModel.update(fd)
+                        } else {
+                            val fd = RemoteFolder()
+                            fd.path = smbFile
+                            smbFile = smbFile.trimEnd('/')
+                            fd.name = smbFile.substring(smbFile.lastIndexOf('/') + 1)
+                            fd.size = 0L
+                            fd.isHost = true
+                            fd.bssid = currentBssid
+                            fd.image = App.host_image
+                            filesViewModel.update(fd)
+                        }
+                    } else {
+                        if (isEnabled) {
+                            isEnabled = false
+                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        }
+                    }
+                } catch (npe: NullPointerException) {
+                    npe.printStackTrace()
+                }
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(
+                this,  // LifecycleOwner
+                callback)
+    }
+
     private fun deleteRemoteHost() {
-        confirmDelete.instantiate().show(requireFragmentManager(), "confirm delete")
+        confirmDelete.instantiate().show(requireActivity().supportFragmentManager, "confirm delete")
     }
 
     class confirmDelete : DialogFragment() {
@@ -507,31 +374,5 @@ class FilesFragment : Fragment() {
             }*/
         }
         return false
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.fragment_files, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_add_new_smb_server -> {
-                val dialog = AddFragment.newInstance(currentBssid.toString(), address)
-                dialog.show(requireActivity().supportFragmentManager, AddFragment.TAG)
-                true
-            }
-            R.id.action_edit_smb_server -> {
-                if (item.isChecked) {
-
-                    item.setChecked(false)
-                } else {
-                    item.setChecked(true)
-
-                }
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
     }
 }

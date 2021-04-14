@@ -33,7 +33,7 @@ public class FilesWorker extends Worker {
     public Result doWork() {
         String address = getInputData().getString("address");
         String url = "smb://" + address + "/";
-        FilesRepository.remoteRootPath = url;
+        App.remoteRootPath = url;
         startSmb(url);
         onPostExecute(App.share, url);
         return success();

@@ -5,6 +5,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.work.Data;
+import androidx.work.ListenableWorker;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -16,9 +17,16 @@ import com.netmontools.lookatnet.ui.remote.model.RemoteModel;
 import com.netmontools.lookatnet.ui.remote.model.RemoteModelDao;
 import com.netmontools.lookatnet.utils.LogSystem;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 import java.util.Objects;
 
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -28,7 +36,7 @@ import jcifs.smb.SmbFile;
 import static androidx.work.ListenableWorker.Result.failure;
 import static androidx.work.ListenableWorker.Result.success;
 
-public class AddWorker extends Worker {
+public class AddWorker  extends Worker {
 
     private static final String TAG = "AddWorker";
     public AppDatabase db;

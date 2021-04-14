@@ -9,25 +9,27 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.netmontools.lookatnet.R;
+import com.netmontools.lookatnet.ui.remote.model.RemoteFolder;
 import com.netmontools.lookatnet.ui.remote.model.RemoteModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RemoteAdapter extends RecyclerView.Adapter<com.netmontools.lookatnet.ui.remote.view.RemoteAdapter.RemoteHolder> {
+public class RemoteAdapter extends RecyclerView.Adapter<RemoteAdapter.RemoteHolder> {
     private List<RemoteModel> hosts = new ArrayList<>();
-    private com.netmontools.lookatnet.ui.remote.view.RemoteAdapter.OnItemClickListener listener;
+    private OnItemClickListener listener;
+    private OnItemLongClickListener longClickListener;
 
     @NonNull
     @Override
-    public com.netmontools.lookatnet.ui.remote.view.RemoteAdapter.RemoteHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RemoteHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.remote_item, parent, false);
-        return new com.netmontools.lookatnet.ui.remote.view.RemoteAdapter.RemoteHolder(itemView);
+        return new RemoteHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull com.netmontools.lookatnet.ui.remote.view.RemoteAdapter.RemoteHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RemoteHolder holder, int position) {
         RemoteModel currentPoint = hosts.get(position);
         holder.textViewName.setText(currentPoint.getName());
         holder.textViewAddress.setText(currentPoint.getAddr());
@@ -64,6 +66,17 @@ public class RemoteAdapter extends RecyclerView.Adapter<com.netmontools.lookatne
                     }
                 }
             });
+
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    int position = getAdapterPosition();
+                    if (longClickListener != null && position != RecyclerView.NO_POSITION) {
+                        longClickListener.onItemLongClick(hosts.get(position));
+                    }
+                    return false;
+                }
+            });
         }
     }
 
@@ -71,7 +84,15 @@ public class RemoteAdapter extends RecyclerView.Adapter<com.netmontools.lookatne
         void onItemClick(RemoteModel point);
     }
 
-    public void setOnItemClickListener(com.netmontools.lookatnet.ui.remote.view.RemoteAdapter.OnItemClickListener listener) {
+    public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
+    }
+
+    public interface OnItemLongClickListener {
+        void onItemLongClick(RemoteModel point);
+    }
+
+    public void setOnItemLongClickListener(RemoteAdapter.OnItemLongClickListener longClickListener) {
+        this.longClickListener = longClickListener;
     }
 }

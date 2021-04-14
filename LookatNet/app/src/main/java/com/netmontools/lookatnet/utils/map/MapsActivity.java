@@ -1,15 +1,11 @@
 package com.netmontools.lookatnet.utils.map;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Display;
 
 import androidx.fragment.app.FragmentActivity;
 import androidx.loader.content.Loader;
-import androidx.loader.content.CursorLoader;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -20,15 +16,18 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.netmontools.lookatnet.BuildConfig;
 import com.netmontools.lookatnet.R;
+import com.netmontools.lookatnet.utils.AddPointFragment;
 import com.netmontools.lookatnet.utils.LogSystem;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
-        //LoaderManager.LoaderCallbacks<Cursor> {
+
     private static final String TAG = "MapsActivity";
     public static final String SATELLITE = "com.netmontools.accesspoints.SATELLITE";
+    public static final String SCHEME = "com.netmontools.accesspoints.SCHEME";
+    public static final String HYBRID = "com.netmontools.accesspoints.HYBRID";
     public static final String LATITUDE = "com.netmontools.accesspoints.LATITUDE";
     public static final String LONGITUDE = "com.netmontools.accesspoints.LONGITUDE";
     public static final String BSSID = "com.netmontools.accesspoints.BSSID";
@@ -37,8 +36,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mGoogleMap;
     public static Cursor mapCursor;
-    private boolean isSatelliteMode = false;
+    private boolean isSatelliteMode;
+    private boolean isSchemeMode;
+    private boolean isHybridMode;
+
     SupportMapFragment mapFragment = null;
+    FloatingActionButton fab;
 
     public long argId = -1;
     public double argLatitude;
@@ -57,7 +60,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         isSatelliteMode = getIntent().getBooleanExtra(SATELLITE,false);
+        isSchemeMode = getIntent().getBooleanExtra(SCHEME,false);
+        isHybridMode = getIntent().getBooleanExtra(HYBRID,false);
 
         argId = getIntent().getLongExtra(ID, -1);
         argLatitude = getIntent().getDoubleExtra(LATITUDE, 0);
@@ -70,8 +76,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
         if (isSatelliteMode) {
+            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        } else if(isSchemeMode){
+            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        } else if(isHybridMode) {
             googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        } else googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        }
 
         mGoogleMap.getUiSettings().setMapToolbarEnabled(false);
 
@@ -79,7 +89,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //LoaderManager lm = getSupportLoaderManager();
             //lm.initLoader(0, null, this);
         } else {
-            //mGoogleMap.setPadding(0,0,0,140);
             LatLngBounds.Builder latLngBuilder = new LatLngBounds.Builder();
             LatLng latLng = new LatLng(argLatitude, argLongitude);
             mGoogleMap.addMarker(new MarkerOptions().position(latLng).title(argSsid).snippet(argBssid).draggable(true));
@@ -87,8 +96,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Display display = this.getWindowManager().getDefaultDisplay();
             // construct a movement instruction for the map camera
             CameraUpdate movement = CameraUpdateFactory.newLatLngBounds(latLngBuilder.build(),
-                    display.getWidth(), display.getHeight(),12);
+                    display.getWidth(), display.getHeight(),16);
             mGoogleMap.moveCamera(movement);
+            mGoogleMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+                @Override
+                public void onMapLongClick(LatLng latLng) {
+                    mGoogleMap.addMarker(new MarkerOptions().position(latLng).title("Marker in this position").snippet("").draggable(true));
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                    AddPointFragment dialog = AddPointFragment.newInstance(latLng.longitude, latLng.latitude);
+                    dialog.show(getSupportFragmentManager(), AddPointFragment.TAG);
+                }
+            });
 
             mGoogleMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
                 @Override
@@ -152,7 +170,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Display display = this.getWindowManager().getDefaultDisplay();
         // construct a movement instruction for the map camera
         CameraUpdate movement = CameraUpdateFactory.newLatLngBounds(latLngBuilder.build(),
-                display.getWidth(), display.getHeight(), 12);
+                display.getWidth(), display.getHeight(), 10);
         mGoogleMap.moveCamera(movement);
     }
 }

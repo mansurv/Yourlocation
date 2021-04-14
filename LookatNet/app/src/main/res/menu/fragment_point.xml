@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <group android:checkableBehavior="single">
-    <item android:id="@+id/action_satellite_mode"
-        android:orderInCategory="100"
-        android:icon="@drawable/ic_map_black_24dp"
-        android:title="@string/action_satellite_mode"
-        android:checked="false"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_sheme_mode"
-        android:orderInCategory="99"
-        android:icon="@drawable/ic_map_black_24dp"
-        android:title="@string/action_sheme_mode"
-        android:checked="false"
-        app:showAsAction="never"/>
-    <item android:id="@+id/action_hybrid_mode"
-        android:orderInCategory="98"
-        android:icon="@drawable/ic_map_black_24dp"
-        android:title="@string/action_hybrid_mode"
-        android:checked="false"
-        app:showAsAction="never"/>
-    </group>
+
+        <item
+            android:id="@+id/action_settings"
+            android:title="@string/action_show_settings"
+            android:icon="@drawable/ic_map_black_24dp"
+            app:showAsAction="never">
+            <menu>
+                <group android:checkableBehavior="single">
+                    <item android:id="@+id/action_satellite_mode"
+                        android:orderInCategory="100"
+                        android:title="@string/action_satellite_mode"
+                        android:checked="false"
+                        app:showAsAction="never"/>
+                    <item android:id="@+id/action_scheme_mode"
+                        android:orderInCategory="99"
+                        android:title="@string/action_scheme_mode"
+                        android:checked="false"
+                        app:showAsAction="never"/>
+                    <item android:id="@+id/action_hybrid_mode"
+                        android:orderInCategory="98"
+                        android:title="@string/action_hybrid_mode"
+                        android:checked="true"
+                        app:showAsAction="never"/>
+                </group>
+            </menu>
+        </item>
+
     </menu>
 

@@ -1,16 +1,18 @@
 package com.netmontools.lookatnet.ui.remote.view
 
 import android.app.Dialog
-import android.app.FragmentManager
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.*
 import android.widget.Toast
+import androidx.annotation.Nullable
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
@@ -24,57 +26,32 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.netmontools.lookatnet.App
 import com.netmontools.lookatnet.R
 import com.netmontools.lookatnet.ui.remote.viewmodel.RemoteViewModel
 import com.netmontools.lookatnet.ui.remote.workers.RemoteWorker
+import com.netmontools.lookatnet.utils.AddFragment
+import javax.xml.transform.TransformerFactory.newInstance
 
-class RemoteFragment : Fragment() {
+class  RemoteFragment  : Fragment() {
+
     private lateinit var  recyclerView: RecyclerView
     private lateinit var remoteRefreshLayout: SwipeRefreshLayout
+    private lateinit var fab: FloatingActionButton
     private var currentBssid: String? = null
-    private var subnetIP = 0
     private var broadcastIP = 0
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        super.onCreateView(inflater, container, savedInstanceState)
-        val root = inflater.inflate(R.layout.fragment_remote, container, false)
-        remoteRefreshLayout = root.findViewById(R.id.remote_refresh_layout)
-        remoteRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_bright, android.R.color.holo_green_light,
-                android.R.color.holo_orange_light, android.R.color.holo_red_light)
-        recyclerView = root.findViewById(R.id.remote_recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(activity)
-        recyclerView.setHasFixedSize(true)
-        adapter = RemoteAdapter()
-        recyclerView.adapter = adapter
+    private var subnetIP = 0
 
-        remoteViewModel = ViewModelProvider.AndroidViewModelFactory(App.getInstance()).create(RemoteViewModel::class.java)
-        remoteViewModel.allRemotes.observe(viewLifecycleOwner, Observer { points -> adapter.setHosts(points) })
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        //setRetainInstance(true);
+        setHasOptionsMenu(true);
+    }
 
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0,
-                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                position = viewHolder.adapterPosition
-                deleteRemoteHost()
-            }
-        }).attachToRecyclerView(recyclerView)
-
-        adapter.setOnItemClickListener { point ->
-            val ipaddress = point?.addr
-            val fragment = FilesFragment()
-            val bundle = Bundle()
-            bundle.putString("tag", ipaddress)
-            fragment.setArguments(bundle)
-            val fragmentManager: androidx.fragment.app.FragmentManager? = fragmentManager
-            requireFragmentManager().beginTransaction().replace(R.id.nav_host_fragment, fragment).commit()
-        }
-
+    fun updateUI() {
         remoteRefreshLayout.setOnRefreshListener(OnRefreshListener {
             // Execute code when refresh layout swiped
             if (isNetworkConnected()) {
@@ -150,11 +127,59 @@ class RemoteFragment : Fragment() {
                 snackbar.show()
             }
         })
+    }
+
+    override fun onViewCreated(view: View, @Nullable savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                position = viewHolder.adapterPosition
+                deleteRemoteHost()
+            }
+        }).attachToRecyclerView(recyclerView)
+
+        adapter.setOnItemClickListener { point ->
+            val ipaddress = point?.addr
+            val name = point?.name
+            val fragment = FilesFragment()
+            val bundle = Bundle()
+            bundle.putString("tag", ipaddress)
+            bundle.putString("tag1", currentBssid)
+            fragment.setArguments(bundle)
+            val fragmentManager: androidx.fragment.app.FragmentManager? = fragmentManager
+            getParentFragmentManager()/*requireFragmentManager()*/.beginTransaction().replace(R.id.nav_host_fragment, fragment).commit()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onCreateView(inflater: LayoutInflater,
+                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        super.onCreateView(inflater, container, savedInstanceState)
+        val root = inflater.inflate(R.layout.fragment_remote, container, false)
+
+        remoteRefreshLayout = root.findViewById(R.id.remote_refresh_layout)
+        remoteRefreshLayout.setColorSchemeResources(android.R.color.holo_blue_bright, android.R.color.holo_green_light,
+                android.R.color.holo_orange_light, android.R.color.holo_red_light)
+        recyclerView = root.findViewById(R.id.remote_recycler_view)
+        recyclerView.layoutManager = LinearLayoutManager(activity)
+        recyclerView.setHasFixedSize(true)
+        adapter = RemoteAdapter()
+        recyclerView.adapter = adapter
+
+        remoteViewModel = ViewModelProvider.AndroidViewModelFactory(App.getInstance()).create(RemoteViewModel::class.java)
+        remoteViewModel.allRemotes.observe(viewLifecycleOwner, Observer { points -> adapter.setHosts(points) })
+
         return root
     }
 
     private fun deleteRemoteHost() {
-        confirmDelete.instantiate().show(requireFragmentManager(), "confirm delete")
+        confirmDelete.instantiate().show(requireActivity().supportFragmentManager, "confirm delete")
     }
 
     class confirmDelete : DialogFragment() {
@@ -230,7 +255,36 @@ class RemoteFragment : Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.fragment_files, menu)
+        inflater.inflate(R.menu.fragment_remote, menu)
         super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_add_new_smb_server -> {
+                if (item.isChecked) {
+
+                    item.setChecked(false)
+                } else {
+                    item.setChecked(true)
+
+                }
+
+                true
+            }
+            R.id.action_edit_smb_server -> {
+                if (item.isChecked) {
+
+                    item.setChecked(false)
+                } else {
+                    item.setChecked(true)
+
+                }
+
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

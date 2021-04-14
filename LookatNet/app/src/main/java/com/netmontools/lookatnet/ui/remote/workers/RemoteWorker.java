@@ -84,8 +84,8 @@ public class RemoteWorker extends Worker {
                         remote.setBssid(currentBssid);
                         remote.setName(splitted[1]);
                         remote.setAddr(splitted[0]);
-                        remote.setLogin("");
-                        remote.setPass("");
+                        //remote.setLogin("");
+                        //remote.setPass("");
                         remote.isPass = false;
                         remoteDao.insert(remote);
                         count++;
@@ -94,7 +94,6 @@ public class RemoteWorker extends Worker {
                         folder.isHost = true;
                         folder.setImage(App.host_image);
                         folder.setName(splitted[1]);
-                        folder.setAddr(splitted[0]);
                         folder.setPath(url + splitted[0] + "/");
                         App.remoteFolders.add(folder);
                     } else if (splitted[len - 1].equals("1")) {
@@ -102,8 +101,8 @@ public class RemoteWorker extends Worker {
                         remote.setBssid(currentBssid);
                         remote.setName(splitted[1]);
                         remote.setAddr(splitted[0]);
-                        remote.setLogin("");
-                        remote.setPass("");
+                        //remote.setLogin("");
+                        //remote.setPass("");
                         remote.isPass = true;
                         remoteDao.insert(remote);
                         count++;

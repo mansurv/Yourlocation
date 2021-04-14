@@ -21,6 +21,8 @@ public class RemoteModel {
     private String pass;
     @Ignore
     public boolean isPass;
+    @Ignore
+    public boolean isChecked;
 
     public long getId() {
         return id;
